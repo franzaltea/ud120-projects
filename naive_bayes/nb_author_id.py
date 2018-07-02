@@ -26,11 +26,10 @@ script_name = 'nb_author_id'
 def usage():
     print """
 Usage:\n
-%s -w <merchant_id> -p <filename> [--debug]
+%s -w <words_file> -a <authors_name>
     - w         words file to be processed
     - a         authors file to be processed
-    - d         database to run the script against, defaults to cert_robot
-    - debug     currently same as --nocron
+    - debug     currently does not do anything
     """ % sys.argv[0]
     sys.exit(1)
 
