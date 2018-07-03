@@ -53,7 +53,7 @@ class SVM_author_id:
         self.log("authors_file: {0}".format(authors_file))
         
         # Train the svm
-        clf = SVC(kernel='linear')
+        clf = SVC(kernel='rbf', C=10000)
         clf.fit(self.features_train, self.labels_train)
 
         #Predict the test data
