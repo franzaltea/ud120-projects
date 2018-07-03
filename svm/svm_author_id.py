@@ -57,9 +57,9 @@ class SVM_author_id:
         clf.fit(self.features_train, self.labels_train)
 
         #Predict the test data
-        pred = clf.predict(self.features_test)
+        self.pred = clf.predict(self.features_test)
 
-        acc = accuracy_score(pred, self.labels_test)
+        acc = accuracy_score(self.pred, self.labels_test)
         self.log("Accuracy is {0}".format(acc))
         self.log("")
         
