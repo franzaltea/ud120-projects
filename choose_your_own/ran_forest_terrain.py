@@ -40,7 +40,7 @@ class Ran_forest_terrain:
         self.log("Random forest subsets set to {0}".format(subset_count))
         
         # Train the Random forest terrain
-        clf = RandomForestClassifier(n_estimators=subset_count,)
+        clf = RandomForestClassifier(n_estimators=subset_count, min_samples_split=5)
         clf.fit(self.features_train, self.labels_train)
 
         #Predict the test data
