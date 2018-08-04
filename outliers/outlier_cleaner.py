@@ -13,8 +13,11 @@ def outlierCleaner(predictions, ages, net_worths):
     
     cleaned_data = []
 
-    ### your code goes here
+    least_squares = (net_worths - predictions)**2
+    cleaned_data = [(ages[i], net_worths[i], least_squares[i]) for i in range(0,len(ages))]
+    cleaned_data.sort(key=lambda x: x[2])
+    remove_index = int(len(ages)*0.90)
 
-    
-    return cleaned_data
+
+    return cleaned_data[0:remove_index]
 
