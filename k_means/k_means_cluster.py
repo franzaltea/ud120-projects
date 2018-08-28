@@ -10,12 +10,25 @@
 import pickle
 import numpy
 import matplotlib.pyplot as plt
-import sys
+import sys, getopt, time
 sys.path.append("../tools/")
 from feature_format import featureFormat, targetFeatureSplit
+from sklearn.cluster import KMeans
 
+#################################################################
+#Functions and classes
+#################################################################
+def usage():
+    print """
+Usage:\n
+%s -n <num_clusters> -f <feature_list> --debug
+    - n         number of clusters
+    - f         list of features to be added (needs at least 2)
+    - debug     currently does not do anything
+    """ % sys.argv[0]
+    sys.exit(1)
 
-
+script_name = 'k_means_cluster'
 
 def Draw(pred, features, poi, mark_poi=False, name="image.png", f1_name="feature 1", f2_name="feature 2"):
     """ some plotting code designed to help you visualize your clusters """
@@ -36,41 +49,96 @@ def Draw(pred, features, poi, mark_poi=False, name="image.png", f1_name="feature
     plt.savefig(name)
     plt.show()
 
+class K_means_cluster:
+
+    # Constructor
+    def __init__(self, n_clusters, features_list):
+        self.n_clusters = n_clusters
+        self.features_list = features_list
+
+        ### load in the dict of dicts containing all the data on each person in the dataset
+        data_dict = pickle.load( open("../final_project/final_project_dataset.pkl", "r") )
+        ### there's an outlier--remove it! 
+        data_dict.pop("TOTAL", 0)
+
+        data = featureFormat(data_dict, features_list )
+        self.poi, self.finance_features = targetFeatureSplit( data )
+
+    # Logging function, just keep it simple for now and print text
+    def log(self, text):
+        print text
+
+    # Main Script Logic
+    def run(self):
+        start_time = time.time()
+        self.log("****** {0} has started. ******".format(script_name))
+
+        # Plots the first two features
+        # Can change this to plot some other feature - add a new option which
+        # specifies which feature to plot maybe
+        for f in self.finance_features:
+            plt.scatter( f[0], f[1] )
+        plt.show()
+
+        ### cluster here; create predictions of the cluster labels
+        ### for the data and store them to a list called pred
+        kmeans = KMeans(n_clusters=self.n_clusters)
+        kmeans.fit(self.finance_features)
+        pred = kmeans.predict(self.finance_features)
+
+        ### rename the "name" parameter when you change the number of features
+        ### so that the figure gets saved to a different file
+        try:
+            Draw(pred, self.finance_features, poi, mark_poi=False, name="clusters.pdf", f1_name= self.features_list[0], f2_name= self.features_list[1])
+        except NameError:
+            print "no predictions object named pred found, no clusters to plot"
+
+        self.log("****** {0} finished. ******".format(script_name))
+        self.log("       {0}".format(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())))
+        self.log("       Total Time: {0}".format(round(time.time() - start_time, 3)))
+
+    def __call__(self):
+        # In case we want debug mode to work differently from non debug mode
+        self.run()
+ 
+
+    
+##################################################################
+# Main Program
+##################################################################
+if __name__ == '__main__':
+    # Can define variables here
+    debug = False
+    n = 3
+    feature_1 = "salary"
+    feature_2 = "exercised_stock_options"
+    feature_3 = "total_payments"
+    poi  = "poi"
+    features_list = [poi, feature_1, feature_2, feature_3]
+    f = ''
 
 
-### load in the dict of dicts containing all the data on each person in the dataset
-data_dict = pickle.load( open("../final_project/final_project_dataset.pkl", "r") )
-### there's an outlier--remove it! 
-data_dict.pop("TOTAL", 0)
+    try:
+        optlist, args = getopt.getopt(sys.argv[1:], "n:f:", ('debug'))
+    except:
+        usage()
+
+    for o, a in optlist:
+        if o in ('--debug',):
+            debug = 1
+        elif o == '-n':
+            n = a
+        elif o == '-f':
+            f = a.split(',')
+            features_list = [poi]
+            features_list.extend(f)
 
 
-### the input features we want to use 
-### can be any key in the person-level dictionary (salary, director_fees, etc.) 
-feature_1 = "salary"
-feature_2 = "exercised_stock_options"
-poi  = "poi"
-features_list = [poi, feature_1, feature_2]
-data = featureFormat(data_dict, features_list )
-poi, finance_features = targetFeatureSplit( data )
+    # Initialize the script with the required variables
+    job = K_means_cluster(n_clusters=n, features_list=features_list)
 
-
-### in the "clustering with 3 features" part of the mini-project,
-### you'll want to change this line to 
-### for f1, f2, _ in finance_features:
-### (as it's currently written, the line below assumes 2 features)
-for f1, f2 in finance_features:
-    plt.scatter( f1, f2 )
-plt.show()
-
-### cluster here; create predictions of the cluster labels
-### for the data and store them to a list called pred
-
-
-
-
-### rename the "name" parameter when you change the number of features
-### so that the figure gets saved to a different file
-try:
-    Draw(pred, finance_features, poi, mark_poi=False, name="clusters.pdf", f1_name=feature_1, f2_name=feature_2)
-except NameError:
-    print "no predictions object named pred found, no clusters to plot"
+    # Run the script and if required, add the database
+    if debug:
+        job.run()
+    else:
+        job()
