@@ -14,6 +14,7 @@ import sys, getopt, time
 sys.path.append("../tools/")
 from feature_format import featureFormat, targetFeatureSplit
 from sklearn.cluster import KMeans
+from sklearn import preprocessing
 
 #################################################################
 #Functions and classes
@@ -24,6 +25,7 @@ Usage:\n
 %s -n <num_clusters> -f <feature_list> --debug
     - n         number of clusters
     - f         list of features to be added (needs at least 2)
+    --scaled    specifies whether to do scaling on data or not
     - debug     currently does not do anything
     """ % sys.argv[0]
     sys.exit(1)
@@ -52,9 +54,10 @@ def Draw(pred, features, poi, mark_poi=False, name="image.png", f1_name="feature
 class K_means_cluster:
 
     # Constructor
-    def __init__(self, n_clusters, features_list):
+    def __init__(self, n_clusters, features_list, scaled):
         self.n_clusters = n_clusters
         self.features_list = features_list
+        self.scaled = scaled
 
         ### load in the dict of dicts containing all the data on each person in the dataset
         data_dict = pickle.load( open("../final_project/final_project_dataset.pkl", "r") )
@@ -72,24 +75,30 @@ class K_means_cluster:
     def run(self):
         start_time = time.time()
         self.log("****** {0} has started. ******".format(script_name))
+        # scale the features if needed:
+        if self.scaled:
+            min_max_scaler = preprocessing.MinMaxScaler()
+            scaled_feature = min_max_scaler.fit_transform(self.finance_features)
+        else:
+            scaled_feature = self.finance_features
 
         # Plots the first two features
         # Can change this to plot some other feature - add a new option which
         # specifies which feature to plot maybe
-        for f in self.finance_features:
+        for f in scaled_feature:
             plt.scatter( f[0], f[1] )
         plt.show()
 
         ### cluster here; create predictions of the cluster labels
         ### for the data and store them to a list called pred
         kmeans = KMeans(n_clusters=self.n_clusters)
-        kmeans.fit(self.finance_features)
-        pred = kmeans.predict(self.finance_features)
+        kmeans.fit(scaled_feature)
+        pred = kmeans.predict(scaled_feature)
 
         ### rename the "name" parameter when you change the number of features
         ### so that the figure gets saved to a different file
         try:
-            Draw(pred, self.finance_features, poi, mark_poi=False, name="clusters.pdf", f1_name= self.features_list[0], f2_name= self.features_list[1])
+            Draw(pred, scaled_feature, poi, mark_poi=False, name="clusters.pdf", f1_name= self.features_list[0], f2_name= self.features_list[1])
         except NameError:
             print "no predictions object named pred found, no clusters to plot"
 
@@ -116,6 +125,7 @@ if __name__ == '__main__':
     poi  = "poi"
     features_list = [poi, feature_1, feature_2, feature_3]
     f = ''
+    scaled = False
 
 
     try:
@@ -132,10 +142,12 @@ if __name__ == '__main__':
             f = a.split(',')
             features_list = [poi]
             features_list.extend(f)
+        elif o == '--scaled':
+            scaled = True
 
 
     # Initialize the script with the required variables
-    job = K_means_cluster(n_clusters=n, features_list=features_list)
+    job = K_means_cluster(n_clusters=n, features_list=features_list, scaled=scaled)
 
     # Run the script and if required, add the database
     if debug:
