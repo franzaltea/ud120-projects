@@ -2,6 +2,8 @@
 
 import pickle
 import numpy
+from sklearn import tree
+from sklearn.metrics import accuracy_score
 numpy.random.seed(42)
 
 
@@ -13,6 +15,11 @@ authors_file = "../text_learning/your_email_authors.pkl"
 word_data = pickle.load( open(words_file, "r"))
 authors = pickle.load( open(authors_file, "r") )
 
+# Clean up word data
+for i, words in enumerate(word_data):
+    for skip in ['sshacklensf', 'cgermannsf']:
+       words = words.replace(skip, '')
+    word_data[i] = words
 
 
 ### test_size is the percentage of events assigned to the test set (the
@@ -26,6 +33,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 vectorizer = TfidfVectorizer(sublinear_tf=True, max_df=0.5,
                              stop_words='english')
 features_train = vectorizer.fit_transform(features_train)
+processed_words = vectorizer.get_feature_names()
 features_test  = vectorizer.transform(features_test).toarray()
 
 
@@ -38,6 +46,24 @@ labels_train   = labels_train[:150]
 
 
 ### your code goes here
+clf = tree.DecisionTreeClassifier(min_samples_split=40)
+clf.fit(features_train, labels_train)
 
+important_features = []
+pos = []
+important_word = []
+for i, imp in enumerate(clf.feature_importances_):
+    if imp > 0.2:
+        pos.append(i)
+        important_features.append(imp)
+        important_word.append(processed_words[i])
+
+print "The important features are %s with importance at %s position %s" % (important_word, important_features, pos)
+
+#Predict the test data
+pred = clf.predict(features_test)
+
+acc = accuracy_score(pred,labels_test)
+print "Accuracy is {0}".format(acc)
 
 

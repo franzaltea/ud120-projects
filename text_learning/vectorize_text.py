@@ -79,7 +79,7 @@ pickle.dump( from_data, open("your_email_authors.pkl", "w") )
 
 
 ### in Part 4, do TfIdf vectorization here
-vectorizer = TfidfVectorizer(word_data, stop_words="english")
+vectorizer = TfidfVectorizer(stop_words="english")
 vectorizer.fit(word_data)
 processed_words = vectorizer.get_feature_names()
 print "Number of word features is {0}".format(len(processed_words))

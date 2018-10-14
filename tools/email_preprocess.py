@@ -42,7 +42,7 @@ def preprocess(words_file = "../tools/word_data.pkl", authors_file="../tools/ema
     features_train, features_test, labels_train, labels_test = cross_validation.train_test_split(word_data, authors, test_size=0.1, random_state=42)
 
 
-
+    # DEBUG transfroms text to proportion of word count in sparse matrix
     ### text vectorization--go from strings to lists of numbers
     vectorizer = TfidfVectorizer(sublinear_tf=True, max_df=0.5,
                                  stop_words='english')
@@ -51,6 +51,7 @@ def preprocess(words_file = "../tools/word_data.pkl", authors_file="../tools/ema
 
 
 
+    # DEBUG only counts 10% of most signifacant words and throws out the rest
     ### feature selection, because text is super high dimensional and 
     ### can be really computationally chewy as a result
     selector = SelectPercentile(f_classif, percentile=10)
