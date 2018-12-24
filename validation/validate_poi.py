@@ -12,7 +12,6 @@
 
 import sys, getopt, time
 import pickle
-import sys
 sys.path.append("../tools/")
 from feature_format import featureFormat, targetFeatureSplit
 from sklearn import tree
